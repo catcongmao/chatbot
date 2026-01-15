@@ -128,7 +128,7 @@ else:
                     st.markdown(msg["content"])
 
     # 底部输入框：用于调整行程
-    if prompt := st.chat_input("对行程不满意？输入修改意见（例如：第二天太累了，换轻松点）, 如果没有其它意见，请输入生成计划即可！"):
+    if prompt := st.chat_input("对行程不满意？输入修改意见（例如：第二天太累了，换轻松点）。🤖🤖🤖 如果没有其它意见，请在输入框中写入 “生成旅游计划” 即可！"🤖🤖🤖):
         # 1. 显示用户输入
         with chat_container:
             with st.chat_message("user", avatar="👤"):
