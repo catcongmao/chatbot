@@ -8,17 +8,17 @@ import datetime
 
 # 配置 DeepSeek 客户端
 client = OpenAI(
-    api_key="sk-3617dbb2d49745c68b88130ce5a6d8b5",  # 请替换你的 Key
+    api_key="sk-3617dbb2d49745c68b88130ce5a6d8b5",  # ⚠️⚠️⚠️ 请在此处填入你的 API Key
     base_url="https://api.deepseek.com"
 )
 
 st.set_page_config(page_title="DeepSeek 随心游", page_icon="✈️", layout="wide")
 
-# 初始化 Session State (用于“记忆”行程和对话历史)
+# 初始化 Session State
 if "messages" not in st.session_state:
-    st.session_state["messages"] = []  # 存储对话历史
+    st.session_state["messages"] = []
 if "itinerary_generated" not in st.session_state:
-    st.session_state["itinerary_generated"] = False  # 标记是否已生成初始行程
+    st.session_state["itinerary_generated"] = False
 
 
 # -----------------------------------------------------------------------------
@@ -31,7 +31,7 @@ def generate_response(messages):
         response = client.chat.completions.create(
             model="deepseek-chat",
             messages=messages,
-            temperature=0.5,  # 稍微高一点的创造性，但不要太离谱
+            temperature=0.5,
             stream=True
         )
         return response
@@ -119,31 +119,21 @@ else:
     chat_container = st.container()
 
     with chat_container:
+        # 1. 先把现有的历史记录画出来
         for msg in st.session_state["messages"]:
-            # 只显示 System 以外的消息
             if msg["role"] != "system":
-                # 根据角色设置头像
                 avatar = "👤" if msg["role"] == "user" else "🤖"
                 with st.chat_message(msg["role"], avatar=avatar):
                     st.markdown(msg["content"])
 
-    # 底部输入框：用于调整行程
-    if prompt := st.chat_input("对行程不满意？输入修改意见（例如：第二天太累了，换轻松点）。如果没有其它意见，请在输入框中写入 “生成旅游计划” 即可生成目标计划！"):
-        # 1. 显示用户输入
-        with chat_container:
-            with st.chat_message("user", avatar="👤"):
-                st.markdown(prompt)
-
-        # 2. 更新历史记录
-        st.session_state["messages"].append({"role": "user", "content": prompt})
-
-        # 3. 生成新回复
-        with chat_container:
+        # 2. 【关键修改点】自动触发回复
+        # 如果最后一条消息是 user 发的，说明 AI 还没回复，现在立马回复！
+        if st.session_state["messages"] and st.session_state["messages"][-1]["role"] == "user":
             with st.chat_message("assistant", avatar="🤖"):
                 response_placeholder = st.empty()
                 full_response = ""
 
-                # 调用 API (带上之前的历史上下文)
+                # 调用 API
                 stream = generate_response(st.session_state["messages"])
 
                 if stream:
@@ -153,7 +143,15 @@ else:
                             full_response += content
                             response_placeholder.markdown(full_response + "▌")
 
+                    # 移除光标，显示最终结果
                     response_placeholder.markdown(full_response)
 
-        # 4. 将 AI 的新回复存入历史
-        st.session_state["messages"].append({"role": "assistant", "content": full_response})
+                # 将 AI 的回复存入历史，防止页面刷新后丢失或重复生成
+                st.session_state["messages"].append({"role": "assistant", "content": full_response})
+
+    # 3. 底部输入框：用于后续的交互调整
+    if prompt := st.chat_input("对行程不满意？输入修改意见（例如：第二天太累了，换轻松点）..."):
+        # 用户输入后，只负责存入历史并刷新页面
+        # 页面刷新后，会重新从上往下执行，自然会走到上面的 "关键修改点" 触发 AI 回复
+        st.session_state["messages"].append({"role": "user", "content": prompt})
+        st.rerun()
