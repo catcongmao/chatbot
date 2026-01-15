@@ -12,7 +12,7 @@ client = OpenAI(
     base_url="https://api.deepseek.com"
 )
 
-st.set_page_config(page_title="DeepSeek 随心游", page_icon="✈️", layout="wide")
+st.set_page_config(page_title="夏天科技 随心游", page_icon="✈️", layout="wide")
 
 # 初始化 Session State
 if "messages" not in st.session_state:
