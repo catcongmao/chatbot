@@ -44,7 +44,7 @@ def generate_response(messages):
 # 3. 界面逻辑
 # -----------------------------------------------------------------------------
 
-st.title("✈️ DeepSeek 智能旅行策划师")
+st.title("✈️ DeepSeek 智能旅行策划师 （璐璐推荐）")
 
 # --- 场景 A: 尚未生成行程，显示信息收集表单 ---
 if not st.session_state["itinerary_generated"]:
